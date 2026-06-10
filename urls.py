@@ -1,10 +1,13 @@
 from django.urls import path
 from . import views
 
-app_name = 'wishlist'
+app_name = 'products'
 
 urlpatterns = [
-    path('', views.wishlist_view, name='wishlist'),
-    path('add/<int:product_id>/', views.add_to_wishlist_view, name='add'),
-    path('remove/<int:product_id>/', views.remove_from_wishlist_view, name='remove'),
+    path('', views.home_view, name='home'),
+    path('shop/', views.product_list_view, name='product_list'),
+    path('product/<slug:slug>/', views.product_detail_view, name='product_detail'),
+    path('category/<slug:slug>/', views.category_view, name='category'),
+    path('subcategory/<slug:slug>/', views.subcategory_view, name='subcategory'),
+    path('newsletter/subscribe/', views.newsletter_subscribe, name='newsletter_subscribe'),
 ]

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Cancel Order{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 text-center">
+                    <i class="bi bi-exclamation-triangle display-1 text-warning"></i>
+                    <h3 class="mt-3">Cancel Order #{{ order.order_number }}?</h3>
+                    <p class="text-secondary">This action cannot be undone. Stock will be restored for ordered items.</p>
+                    <form method="post" class="d-flex gap-2 justify-content-center">{% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Yes, Cancel Order</button>
+                        <a href="{% url 'orders:order_detail' order.order_number %}" class="btn btn-outline-secondary">Go Back</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

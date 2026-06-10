@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="fw-bold mb-4">Checkout</h2>
+    <div class="row">
+        <div class="col-lg-8">
+            <form method="post" id="checkoutForm">{% csrf_token %}
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white fw-bold">Shipping Address</div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6"><label class="form-label">First Name</label>{{ form.shipping_first_name }}</div>
+                            <div class="col-md-6"><label class="form-label">Last Name</label>{{ form.shipping_last_name }}</div>
+                            <div class="col-md-6"><label class="form-label">Email</label>{{ form.shipping_email }}</div>
+                            <div class="col-md-6"><label class="form-label">Phone</label>{{ form.shipping_phone }}</div>
+                            <div class="col-12"><label class="form-label">Address</label>{{ form.shipping_address }}</div>
+                            <div class="col-md-4"><label class="form-label">City</label>{{ form.shipping_city }}</div>
+                            <div class="col-md-4"><label class="form-label">State</label>{{ form.shipping_state }}</div>
+                            <div class="col-md-4"><label class="form-label">Postal Code</label>{{ form.shipping_postal_code }}</div>
+                            <div class="col-md-6"><label class="form-label">Country</label>{{ form.shipping_country }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white fw-bold">Billing Address</div>
+                    <div class="card-body">
+                        <div class="form-check mb-3">
+                            {{ form.same_as_shipping }}
+                            <label class="form-check-label" for="id_same_as_shipping">Same as shipping address</label>
+                        </div>
+                        <div id="billingFields" class="row g-3">
+                            <div class="col-md-6"><label class="form-label">First Name</label>{{ form.billing_first_name }}</div>
+                            <div class="col-md-6"><label class="form-label">Last Name</label>{{ form.billing_last_name }}</div>
+                            <div class="col-md-6"><label class="form-label">Email</label>{{ form.billing_email }}</div>
+                            <div class="col-md-6"><label class="form-label">Phone</label>{{ form.billing_phone }}</div>
+                            <div class="col-12"><label class="form-label">Address</label>{{ form.billing_address }}</div>
+                            <div class="col-md-4"><label class="form-label">City</label>{{ form.billing_city }}</div>
+                            <div class="col-md-4"><label class="form-label">State</label>{{ form.billing_state }}</div>
+                            <div class="col-md-4"><label class="form-label">Postal Code</label>{{ form.billing_postal_code }}</div>
+                            <div class="col-md-6"><label class="form-label">Country</label>{{ form.billing_country }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white fw-bold">Order Notes (Optional)</div>
+                    <div class="card-body">{{ form.notes }}</div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg w-100">Place Order</button>
+            </form>
+        </div>
+        <div class="col-lg-4 mt-4 mt-lg-0">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white fw-bold">Order Summary</div>
+                <div class="card-body">
+                    {% for item in items %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>{{ item.product.name|truncatechars:25 }} x{{ item.quantity }}</span>
+                        <span>${{ item.total_price|floatformat:2 }}</span>
+                    </div>
+                    {% endfor %}
+                    <hr>
+                    <div class="d-flex justify-content-between"><span>Subtotal</span><span>${{ subtotal|floatformat:2 }}</span></div>
+                    <div class="d-flex justify-content-between"><span>Shipping</span><span>${{ shipping_cost|floatformat:2 }}</span></div>
+                    <div class="d-flex justify-content-between"><span>Tax</span><span>${{ tax|floatformat:2 }}</span></div>
+                    <hr>
+                    <div class="d-flex justify-content-between fw-bold fs-5"><span>Total</span><span>${{ total|floatformat:2 }}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('id_same_as_shipping').addEventListener('change', function() {
+    document.getElementById('billingFields').style.display = this.checked ? 'none' : 'flex';
+});
+document.getElementById('billingFields').style.display = document.getElementById('id_same_as_shipping').checked ? 'none' : 'flex';
+</script>
+{% endblock %}

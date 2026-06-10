@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Confirmed{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <i class="bi bi-check-circle-fill display-1 text-success"></i>
+    <h2 class="fw-bold mt-3">Thank You for Your Order!</h2>
+    <p class="lead text-secondary">Order #{{ order.order_number }} has been placed successfully.</p>
+    <div class="card border-0 shadow-sm mx-auto mt-4" style="max-width:500px">
+        <div class="card-body text-start">
+            <p><strong>Total:</strong> ${{ order.total|floatformat:2 }}</p>
+            <p><strong>Status:</strong> <span class="badge bg-warning text-dark">{{ order.get_status_display }}</span></p>
+            <p><strong>Shipping to:</strong> {{ order.shipping_address }}, {{ order.shipping_city }}</p>
+        </div>
+    </div>
+    <div class="mt-4">
+        <a href="{% url 'orders:order_detail' order.order_number %}" class="btn btn-primary">View Order Details</a>
+        <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary">Continue Shopping</a>
+    </div>
+</div>
+{% endblock %}
