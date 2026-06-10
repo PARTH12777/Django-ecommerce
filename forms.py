@@ -1,40 +1,87 @@
 from django import forms
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
+from django.contrib.auth.models import User
+from .models import Profile
 
 
-class CheckoutForm(forms.Form):
-    shipping_first_name = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    shipping_last_name = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    shipping_email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control'}))
-    shipping_phone = forms.CharField(max_length=20, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    shipping_address = forms.CharField(max_length=255, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    shipping_city = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    shipping_state = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    shipping_postal_code = forms.CharField(max_length=20, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    shipping_country = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
+class UserRegisterForm(UserCreationForm):
+    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={
+        'class': 'form-control', 'placeholder': 'Email address'
+    }))
+    first_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={
+        'class': 'form-control', 'placeholder': 'First name'
+    }))
+    last_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={
+        'class': 'form-control', 'placeholder': 'Last name'
+    }))
 
-    same_as_shipping = forms.BooleanField(required=False, initial=True, widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}))
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2']
 
-    billing_first_name = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'class': 'form-control billing-field'}))
-    billing_last_name = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'class': 'form-control billing-field'}))
-    billing_email = forms.EmailField(required=False, widget=forms.EmailInput(attrs={'class': 'form-control billing-field'}))
-    billing_phone = forms.CharField(max_length=20, required=False, widget=forms.TextInput(attrs={'class': 'form-control billing-field'}))
-    billing_address = forms.CharField(max_length=255, required=False, widget=forms.TextInput(attrs={'class': 'form-control billing-field'}))
-    billing_city = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'class': 'form-control billing-field'}))
-    billing_state = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'class': 'form-control billing-field'}))
-    billing_postal_code = forms.CharField(max_length=20, required=False, widget=forms.TextInput(attrs={'class': 'form-control billing-field'}))
-    billing_country = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'class': 'form-control billing-field'}))
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in ['username', 'password1', 'password2']:
+            self.fields[field].widget.attrs.update({'class': 'form-control'})
 
-    notes = forms.CharField(required=False, widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError('This email is already registered.')
+        return email
 
-    def clean(self):
-        cleaned = super().clean()
-        if not cleaned.get('same_as_shipping'):
-            billing_fields = [
-                'billing_first_name', 'billing_last_name', 'billing_email',
-                'billing_phone', 'billing_address', 'billing_city',
-                'billing_state', 'billing_postal_code', 'billing_country',
-            ]
-            for field in billing_fields:
-                if not cleaned.get(field):
-                    self.add_error(field, 'This field is required when billing differs from shipping.')
-        return cleaned
+
+class UserLoginForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs.update({
+            'class': 'form-control', 'placeholder': 'Username'
+        })
+        self.fields['password'].widget.attrs.update({
+            'class': 'form-control', 'placeholder': 'Password'
+        })
+
+
+class ProfileUpdateForm(forms.ModelForm):
+    first_name = forms.CharField(max_length=30, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    last_name = forms.CharField(max_length=30, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control'}))
+
+    class Meta:
+        model = Profile
+        fields = ['phone', 'address_line1', 'address_line2', 'city', 'state', 'postal_code', 'country', 'avatar']
+        widgets = {
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'address_line1': forms.TextInput(attrs={'class': 'form-control'}),
+            'address_line2': forms.TextInput(attrs={'class': 'form-control'}),
+            'city': forms.TextInput(attrs={'class': 'form-control'}),
+            'state': forms.TextInput(attrs={'class': 'form-control'}),
+            'postal_code': forms.TextInput(attrs={'class': 'form-control'}),
+            'country': forms.TextInput(attrs={'class': 'form-control'}),
+            'avatar': forms.FileInput(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.user:
+            self.fields['first_name'].initial = self.instance.user.first_name
+            self.fields['last_name'].initial = self.instance.user.last_name
+            self.fields['email'].initial = self.instance.user.email
+
+    def save(self, commit=True):
+        profile = super().save(commit=False)
+        user = profile.user
+        user.first_name = self.cleaned_data['first_name']
+        user.last_name = self.cleaned_data['last_name']
+        user.email = self.cleaned_data['email']
+        if commit:
+            user.save()
+            profile.save()
+        return profile
+
+
+class CustomPasswordChangeForm(PasswordChangeForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'form-control'})
